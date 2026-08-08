@@ -55,6 +55,7 @@ def complete_structured(messages: list[dict[str, str]], response_model: type[Mod
                 messages=messages,
                 api_key=settings.openrouter_api_key,
                 response_format=response_model,
+                timeout=settings.openrouter_request_timeout_seconds,
             )
             content = response.choices[0].message.content
             return response_model.model_validate_json(_strip_code_fence(content))

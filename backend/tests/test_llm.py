@@ -32,6 +32,19 @@ def test_complete_structured_returns_result_on_success(monkeypatch):
     assert result.reply == "hi"
 
 
+def test_complete_structured_passes_a_request_timeout(monkeypatch):
+    # Regression check: litellm.completion() with no timeout can hang
+    # indefinitely if a provider accepts the connection but never replies
+    # (observed for real — a request hung for 10+ minutes with no error).
+    def fake_completion(**kwargs):
+        assert kwargs["timeout"] == settings.openrouter_request_timeout_seconds
+        return _FakeResponse('{"reply": "hi", "field_updates": {}}')
+
+    monkeypatch.setattr("app.llm.litellm.completion", fake_completion)
+
+    complete_structured([{"role": "user", "content": "hi"}], ChatTurnReply)
+
+
 def test_complete_structured_tolerates_a_markdown_code_fence(monkeypatch):
     def fake_completion(**kwargs):
         return _FakeResponse('```json\n{"reply": "hi", "field_updates": {}}\n```')
