@@ -6,7 +6,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 IMAGE_NAME="prelegal-app"
 CONTAINER_NAME="prelegal-app"
-PORT="8000"
+# 8010, not 8000: keeps this container from colliding with other local
+# projects that commonly default to 8000 (or 3000 for a Node dev server).
+PORT="8010"
 
 cd "$REPO_ROOT"
 
