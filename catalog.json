@@ -1,0 +1,57 @@
+[
+  {
+    "name": "Mutual Non-Disclosure Agreement",
+    "description": "A mutual NDA that allows two parties to disclose confidential information to each other in connection with a shared purpose, such as evaluating a potential business relationship. Created by Common Paper with a committee of over 40 attorneys.",
+    "filename": "Mutual-NDA.md"
+  },
+  {
+    "name": "Cloud Service Agreement",
+    "description": "A standard agreement for selling and buying cloud software and SaaS products, covering access and use of the service, support, payment, data privacy, warranties, liability, and indemnification.",
+    "filename": "CSA.md"
+  },
+  {
+    "name": "Design Partner Agreement",
+    "description": "An agreement that gives an early customer or design partner access to a product in exchange for feedback, allowing a provider to develop and improve the product before general availability.",
+    "filename": "Design-Partner-Agreement.md"
+  },
+  {
+    "name": "Service Level Agreement",
+    "description": "A companion agreement to the Cloud Service Agreement that sets uptime and support response time targets and the service credits a customer can receive if those targets are not met.",
+    "filename": "SLA.md"
+  },
+  {
+    "name": "Professional Services Agreement",
+    "description": "A framework agreement for engaging professional services under one or more statements of work (SOWs), covering deliverables, intellectual property, payment, warranties, and liability.",
+    "filename": "PSA.md"
+  },
+  {
+    "name": "Data Processing Agreement",
+    "description": "A DPA that governs how a service provider processes personal data on behalf of a customer, including subprocessors, international data transfers (EEA SCCs and UK Addendum), security incident response, and audit rights.",
+    "filename": "DPA.md"
+  },
+  {
+    "name": "Software License Agreement",
+    "description": "A standard agreement for licensing on-premises or self-hosted software, covering license grants, restrictions, updates, warranties, limitation of liability, and indemnification.",
+    "filename": "Software-License-Agreement.md"
+  },
+  {
+    "name": "Partnership Agreement",
+    "description": "A flexible agreement for business partnerships that involve mutual obligations, such as co-marketing or referral arrangements, including trademark licensing and payment terms.",
+    "filename": "Partnership-Agreement.md"
+  },
+  {
+    "name": "Pilot Agreement",
+    "description": "A short-term trial or evaluation agreement that lets a prospective customer test a product or service before committing to a longer-term commercial agreement.",
+    "filename": "Pilot-Agreement.md"
+  },
+  {
+    "name": "Business Associate Agreement",
+    "description": "A HIPAA-required agreement between a covered entity and a business associate that governs the use, disclosure, and protection of protected health information (PHI).",
+    "filename": "BAA.md"
+  },
+  {
+    "name": "AI Addendum",
+    "description": "An addendum that supplements a Common Paper agreement with terms specific to AI features, covering use of AI services, model training, ownership of inputs and outputs, and AI-related disclaimers.",
+    "filename": "AI-Addendum.md"
+  }
+]
