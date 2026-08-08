@@ -30,21 +30,11 @@ const styles = StyleSheet.create({
     paddingLeft: 68,
     paddingRight: 52,
   },
-  ruleLine: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 40,
-    width: 1,
-    backgroundColor: COLOR.rule,
-  },
-  ruleLineFaint: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 44,
-    width: 1,
-    backgroundColor: COLOR.ruleFaint,
+  ruledColumn: {
+    marginLeft: -28,
+    paddingLeft: 27,
+    borderLeftWidth: 1,
+    borderLeftColor: COLOR.rule,
   },
   header: {
     marginBottom: 22,
@@ -191,69 +181,68 @@ export function MutualNdaPdfDocument({ formData }: { formData: MutualNdaFormData
   return (
     <Document title="Mutual Non-Disclosure Agreement">
       <Page size="A4" style={styles.page}>
-        <View style={styles.ruleLine} fixed />
-        <View style={styles.ruleLineFaint} fixed />
+        <View style={styles.ruledColumn}>
+          <View style={styles.header}>
+            <Text style={styles.eyebrow}>COVER PAGE</Text>
+            <Text style={styles.title}>Mutual Non-Disclosure Agreement</Text>
+          </View>
 
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>COVER PAGE</Text>
-          <Text style={styles.title}>Mutual Non-Disclosure Agreement</Text>
+          <View style={styles.partiesRow}>
+            <View style={styles.partyCol}>
+              <Text style={styles.sectionLabel}>PARTY ONE</Text>
+              <PdfField label="Legal Name" value={formData.partyOneName} />
+              <PdfField label="Address" value={formData.partyOneAddress} />
+            </View>
+            <View style={styles.partyCol}>
+              <Text style={styles.sectionLabel}>PARTY TWO</Text>
+              <PdfField label="Legal Name" value={formData.partyTwoName} />
+              <PdfField label="Address" value={formData.partyTwoAddress} />
+            </View>
+          </View>
+
+          <View style={styles.termsGrid}>
+            <PdfField label="Purpose" value={formData.purpose} />
+            <View style={styles.termsRow}>
+              <View style={styles.termsRowCol}>
+                <PdfField
+                  label="Effective Date"
+                  value={fieldDisplayValue(formData, "effectiveDate")}
+                />
+              </View>
+              <View style={styles.termsRowCol}>
+                <PdfField label="MNDA Term" value={formData.mndaTerm} />
+              </View>
+            </View>
+            <View style={styles.termsRow}>
+              <View style={styles.termsRowCol}>
+                <PdfField
+                  label="Term of Confidentiality"
+                  value={formData.termOfConfidentiality}
+                />
+              </View>
+              <View style={styles.termsRowCol}>
+                <PdfField label="Governing Law" value={formData.governingLaw} />
+              </View>
+            </View>
+            <PdfField label="Jurisdiction" value={formData.jurisdiction} />
+          </View>
+
+          <Text style={styles.standardTermsHeading}>Standard Terms</Text>
+
+          {MUTUAL_NDA_CLAUSES.map((clause) => (
+            <View key={clause.number} style={styles.clause} wrap={false}>
+              <View style={styles.clauseNumberCol}>
+                <Text style={styles.clauseNumber}>{clause.number}.</Text>
+              </View>
+              <Text style={styles.clauseBody}>
+                <Text style={styles.clauseTitle}>{clause.title}. </Text>
+                {clause.segments.map((segment, index) => (
+                  <ClauseSegment key={index} segment={segment} formData={formData} />
+                ))}
+              </Text>
+            </View>
+          ))}
         </View>
-
-        <View style={styles.partiesRow}>
-          <View style={styles.partyCol}>
-            <Text style={styles.sectionLabel}>PARTY ONE</Text>
-            <PdfField label="Legal Name" value={formData.partyOneName} />
-            <PdfField label="Address" value={formData.partyOneAddress} />
-          </View>
-          <View style={styles.partyCol}>
-            <Text style={styles.sectionLabel}>PARTY TWO</Text>
-            <PdfField label="Legal Name" value={formData.partyTwoName} />
-            <PdfField label="Address" value={formData.partyTwoAddress} />
-          </View>
-        </View>
-
-        <View style={styles.termsGrid}>
-          <PdfField label="Purpose" value={formData.purpose} />
-          <View style={styles.termsRow}>
-            <View style={styles.termsRowCol}>
-              <PdfField
-                label="Effective Date"
-                value={fieldDisplayValue(formData, "effectiveDate")}
-              />
-            </View>
-            <View style={styles.termsRowCol}>
-              <PdfField label="MNDA Term" value={formData.mndaTerm} />
-            </View>
-          </View>
-          <View style={styles.termsRow}>
-            <View style={styles.termsRowCol}>
-              <PdfField
-                label="Term of Confidentiality"
-                value={formData.termOfConfidentiality}
-              />
-            </View>
-            <View style={styles.termsRowCol}>
-              <PdfField label="Governing Law" value={formData.governingLaw} />
-            </View>
-          </View>
-          <PdfField label="Jurisdiction" value={formData.jurisdiction} />
-        </View>
-
-        <Text style={styles.standardTermsHeading}>Standard Terms</Text>
-
-        {MUTUAL_NDA_CLAUSES.map((clause) => (
-          <View key={clause.number} style={styles.clause} wrap={false}>
-            <View style={styles.clauseNumberCol}>
-              <Text style={styles.clauseNumber}>{clause.number}.</Text>
-            </View>
-            <Text style={styles.clauseBody}>
-              <Text style={styles.clauseTitle}>{clause.title}. </Text>
-              {clause.segments.map((segment, index) => (
-                <ClauseSegment key={index} segment={segment} formData={formData} />
-              ))}
-            </Text>
-          </View>
-        ))}
 
         <Text style={styles.footer} fixed>
           {MUTUAL_NDA_ATTRIBUTION}
