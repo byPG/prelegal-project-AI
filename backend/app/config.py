@@ -50,6 +50,13 @@ class Settings(BaseSettings):
     # recognize as any model at all.
     openrouter_model: str = "openrouter/openrouter/free"
     openrouter_daily_request_limit: int = 200
+    # Without an explicit timeout, litellm/httpx will wait indefinitely if
+    # a provider accepts the connection but never responds (seen for real:
+    # a request hung for 10+ minutes with no error and no reply). A hang
+    # is worse than a clean failure — it burns the retry's usefulness and
+    # leaves the user staring at a spinner forever instead of getting a
+    # clear error to act on.
+    openrouter_request_timeout_seconds: float = 45.0
 
 
 settings = Settings()
