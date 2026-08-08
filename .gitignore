@@ -34,6 +34,10 @@ htmlcov/
 # Alembic / DB
 *.sqlite3
 *.db
+backend/data/
+
+# Frontend static export copied in at Docker build time
+backend/static/
 
 # ---- Node / Next.js ----
 node_modules/

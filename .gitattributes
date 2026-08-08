@@ -1,0 +1,5 @@
+# Force LF line endings for everyone, regardless of local core.autocrlf,
+# so scripts/*.sh keep working shebangs on real Linux/macOS clones and the
+# Docker image (built from a checkout, not this working tree) never sees
+# CRLF-mangled shell scripts.
+* text=auto eol=lf
