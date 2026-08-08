@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     ]
 
     openrouter_api_key: str | None = None
+    openrouter_primary_model: str = "openrouter/openai/gpt-oss-120b:free"
+    openrouter_fallback_model: str = "openrouter/free"
+    openrouter_daily_request_limit: int = 200
 
 
 settings = Settings()

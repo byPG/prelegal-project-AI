@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import BACKEND_DIR, INSECURE_DEFAULT_JWT_SECRET, settings
 from .database import reset_database
-from .routers import auth
+from .routers import auth, chat
 
 STATIC_DIR = BACKEND_DIR / "static"
 
@@ -37,6 +37,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(chat.router)
 
 
 @app.get("/api/health")
