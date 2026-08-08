@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import { ChatPanel } from "@/components/ChatPanel";
 import { MutualNdaForm } from "@/components/MutualNdaForm";
 import { MutualNdaPreview } from "@/components/MutualNdaPreview";
 import { BLANK_MUTUAL_NDA_FORM_DATA, type MutualNdaFormData } from "@/types/mutual-nda";
@@ -25,6 +26,17 @@ export default function Home() {
     setFormData((prev) => ({ ...prev, [key]: value }));
   }
 
+  function handleFieldsUpdate(update: Partial<MutualNdaFormData>) {
+    setFormData((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(update) as (keyof MutualNdaFormData)[]) {
+        const value = update[key];
+        if (value != null) next[key] = value;
+      }
+      return next;
+    });
+  }
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-line px-6 py-5 sm:px-10">
@@ -45,14 +57,44 @@ export default function Home() {
               Step 1
             </p>
             <h2 className="mb-6 font-display text-xl font-semibold text-ink">
-              Fill in the details
+              Talk to the assistant
             </h2>
-            <MutualNdaForm formData={formData} onChange={handleChange} />
+            <ChatPanel fields={formData} onFieldsUpdate={handleFieldsUpdate} />
           </div>
+
+          <details className="group border border-line bg-parchment-soft px-6 py-7">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+              <span>
+                <span className="mb-1 block font-mono text-[0.68rem] uppercase tracking-[0.2em] text-brass">
+                  Step 2
+                </span>
+                <span className="font-display text-xl font-semibold text-ink">
+                  Edit the details directly
+                </span>
+              </span>
+              <svg
+                viewBox="0 0 20 20"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0 text-brass transition-transform duration-150 group-open:rotate-180"
+                aria-hidden
+              >
+                <path d="M5 7.5 10 12.5 15 7.5" />
+              </svg>
+            </summary>
+            <div className="mt-6">
+              <MutualNdaForm formData={formData} onChange={handleChange} />
+            </div>
+          </details>
 
           <div className="border border-line bg-parchment-soft px-6 py-7">
             <p className="mb-1 font-mono text-[0.68rem] uppercase tracking-[0.2em] text-brass">
-              Step 2
+              Step 3
             </p>
             <h2 className="mb-4 font-display text-xl font-semibold text-ink">
               Download your document

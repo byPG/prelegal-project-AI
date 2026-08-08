@@ -25,4 +25,9 @@ RUN uv sync --frozen --no-dev
 ENV PATH="/app/backend/.venv/bin:$PATH"
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Invoke uvicorn directly rather than via `uv run`: `uv run` re-checks (and,
+# if it thinks anything drifted, re-syncs over the network) the environment
+# on every invocation, which turns container startup into something that
+# can silently hit the network and install packages instead of just running
+# the image that was already frozen-built.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
