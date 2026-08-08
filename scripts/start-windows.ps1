@@ -4,7 +4,9 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $ImageName = "prelegal-app"
 $ContainerName = "prelegal-app"
-$Port = 8000
+# 8010, not 8000: keeps this container from colliding with other local
+# projects that commonly default to 8000 (or 3000 for a Node dev server).
+$Port = 8010
 
 Set-Location $RepoRoot
 

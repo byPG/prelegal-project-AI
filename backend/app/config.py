@@ -34,8 +34,21 @@ class Settings(BaseSettings):
     ]
 
     openrouter_api_key: str | None = None
-    openrouter_primary_model: str = "openrouter/openai/gpt-oss-120b:free"
-    openrouter_fallback_model: str = "openrouter/free"
+    # OpenRouter's own "Free Models Router" — picks whichever free model is
+    # currently live and capable of the request (structured output, tool
+    # calling, ...), rather than a specific pinned `:free` slug. Pinning one
+    # (e.g. openai/gpt-oss-120b:free) was tried and rotted away within
+    # hours as OpenRouter pulled/repriced it, exactly the volatility
+    # CLAUDE.md's AI-layer section warns about — the adaptive router is
+    # self-healing against that instead of needing to be re-pinned by hand.
+    #
+    # Note the doubled "openrouter/": litellm's own "openrouter/" custom-
+    # provider prefix is stripped before the remainder is sent to
+    # OpenRouter's API, so the *actual* OpenRouter model id here —
+    # "openrouter/free" — has to be given as "openrouter/openrouter/free"
+    # or litellm sends the single word "free", which OpenRouter doesn't
+    # recognize as any model at all.
+    openrouter_model: str = "openrouter/openrouter/free"
     openrouter_daily_request_limit: int = 200
 
 
