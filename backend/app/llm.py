@@ -1,5 +1,6 @@
 import logging
 import re
+from concurrent.futures import ThreadPoolExecutor
 from typing import TypeVar
 
 import litellm
@@ -15,6 +16,17 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 _CODE_FENCE = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE)
 
 _MAX_ATTEMPTS = 2
+
+# litellm's own `timeout=` kwarg turned out not to reliably bound the call
+# for every model/provider OpenRouter's adaptive router can pick — verified
+# live: a request hung 100+ seconds with `timeout=45` set and never even
+# raised. Running the call in its own thread and giving up on *that*
+# (rather than trusting the call to give up on itself) is a hard guarantee
+# regardless of what litellm/httpx does internally. The abandoned thread
+# may keep running in the background until it eventually finishes on its
+# own — Python has no safe way to kill a thread — but the request handler
+# is no longer hostage to it.
+_executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="llm-call")
 
 
 class LlmUnavailableError(Exception):
@@ -50,16 +62,24 @@ def complete_structured(messages: list[dict[str, str]], response_model: type[Mod
         if attempt > 0:
             daily_request_counter.record_and_check()
         try:
-            response = litellm.completion(
+            future = _executor.submit(
+                litellm.completion,
                 model=settings.openrouter_model,
                 messages=messages,
                 api_key=settings.openrouter_api_key,
                 response_format=response_model,
                 timeout=settings.openrouter_request_timeout_seconds,
             )
+            # future.result()'s timeout is the enforcement that actually
+            # works; the timeout= kwarg above is kept as a best-effort hint
+            # to litellm/httpx, not relied on alone.
+            response = future.result(timeout=settings.openrouter_request_timeout_seconds)
             content = response.choices[0].message.content
             return response_model.model_validate_json(_strip_code_fence(content))
         except Exception as exc:
+            # Includes concurrent.futures.TimeoutError (a subclass of the
+            # builtin TimeoutError -> OSError -> Exception), raised by
+            # future.result() above when the call didn't finish in time.
             last_error = exc
             logger.warning(
                 "LLM call failed (attempt %d/%d) for model %s",

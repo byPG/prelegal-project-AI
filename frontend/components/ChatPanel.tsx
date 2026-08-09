@@ -3,19 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { ChatApiError, fetchGreeting, sendChatMessage } from "@/lib/api";
 import type { ChatMessage } from "@/types/chat";
-import type { MutualNdaFormData } from "@/types/mutual-nda";
 
 interface ChatPanelProps {
-  fields: MutualNdaFormData;
-  onFieldsUpdate: (update: Partial<MutualNdaFormData>) => void;
+  documentId: string | null;
+  fields: Record<string, string>;
+  onTurnComplete: (documentId: string | null, fieldUpdates: Record<string, string | null>) => void;
 }
 
-export function ChatPanel({ fields, onFieldsUpdate }: ChatPanelProps) {
+export function ChatPanel({ documentId, fields, onTurnComplete }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,8 +29,7 @@ export function ChatPanel({ fields, onFieldsUpdate }: ChatPanelProps) {
           setMessages([
             {
               role: "assistant",
-              content:
-                "Hi! I couldn't reach the assistant just now, but you can still fill in the form directly below.",
+              content: "Hi! I couldn't reach the assistant just now — please try again in a moment.",
             },
           ]);
         }
@@ -43,6 +43,14 @@ export function ChatPanel({ fields, onFieldsUpdate }: ChatPanelProps) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    // Runs after React has committed the DOM update that clears the
+    // textarea's `disabled` attribute — focusing synchronously in
+    // handleSend's `finally` block would race that update and silently
+    // no-op, since a still-disabled element can't receive focus.
+    if (!isSending) inputRef.current?.focus();
+  }, [isSending]);
+
   async function handleSend() {
     const content = input.trim();
     if (!content || isSending) return;
@@ -54,9 +62,9 @@ export function ChatPanel({ fields, onFieldsUpdate }: ChatPanelProps) {
     setError(null);
 
     try {
-      const response = await sendChatMessage(nextMessages, fields);
+      const response = await sendChatMessage(nextMessages, documentId, fields);
       setMessages((prev) => [...prev, { role: "assistant", content: response.reply }]);
-      onFieldsUpdate(response.fields);
+      onTurnComplete(response.document_id, response.fields);
     } catch (err) {
       setError(
         err instanceof ChatApiError ? err.message : "Couldn't reach the assistant. Please try again.",
@@ -95,6 +103,7 @@ export function ChatPanel({ fields, onFieldsUpdate }: ChatPanelProps) {
 
       <div className="flex items-end gap-2">
         <textarea
+          ref={inputRef}
           rows={2}
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -104,7 +113,7 @@ export function ChatPanel({ fields, onFieldsUpdate }: ChatPanelProps) {
               handleSend();
             }
           }}
-          placeholder="Tell the assistant about your NDA…"
+          placeholder="Tell the assistant what you need…"
           disabled={isSending}
           className="flex-1 resize-none border-b border-line bg-transparent py-1.5 font-sans text-[0.95rem] text-ink placeholder:text-ink-soft/40 focus:border-rule focus:outline-none disabled:opacity-50"
         />

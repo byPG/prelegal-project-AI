@@ -1,11 +1,12 @@
 "use client";
 
 import { PDFDownloadLink } from "@react-pdf/renderer";
-import { MutualNdaPdfDocument } from "@/components/MutualNdaPdfDocument";
-import type { MutualNdaFormData } from "@/types/mutual-nda";
+import { DocumentPdfDocument } from "@/components/DocumentPdfDocument";
+import type { DocumentTemplate } from "@/types/document";
 
 interface DownloadPdfButtonProps {
-  formData: MutualNdaFormData;
+  template: DocumentTemplate;
+  fields: Record<string, string>;
 }
 
 function SealIcon() {
@@ -26,14 +27,14 @@ function SealIcon() {
   );
 }
 
-export function DownloadPdfButton({ formData }: DownloadPdfButtonProps) {
-  const fileName = `${formData.partyOneName || "Party-One"}-${
-    formData.partyTwoName || "Party-Two"
-  }-Mutual-NDA.pdf`.replace(/\s+/g, "-");
+export function DownloadPdfButton({ template, fields }: DownloadPdfButtonProps) {
+  const fileName = `${fields.partyOneName || "Party-One"}-${fields.partyTwoName || "Party-Two"}-${
+    template.name
+  }.pdf`.replace(/\s+/g, "-");
 
   return (
     <PDFDownloadLink
-      document={<MutualNdaPdfDocument formData={formData} />}
+      document={<DocumentPdfDocument template={template} fields={fields} />}
       fileName={fileName}
       className="group inline-flex items-center gap-2.5 rounded-full bg-ledger px-6 py-3 font-mono text-[0.75rem] uppercase tracking-[0.14em] text-parchment-soft shadow-[0_10px_24px_-12px_rgba(30,56,35,0.65)] transition-all duration-150 ease-out hover:bg-ledger-dark active:scale-95 active:-rotate-1"
     >
