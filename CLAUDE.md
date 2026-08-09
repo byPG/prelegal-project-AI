@@ -8,7 +8,7 @@ The full list of supported documents lives in `catalog.json` at the repo root:
 
 @catalog.json
 
-The target is support for all 11 document types, along with full user authentication and document persistence — see **Implementation status** at the end of this file for what's actually built so far.
+All 11 document types are supported; full user authentication and document persistence are still targets — see **Implementation status** at the end of this file for what's actually built so far.
 
 ## How feature work happens
 
@@ -86,11 +86,17 @@ The base is blue and purple — neighbors on the color wheel (roughly 200°–26
 
 **Built (PREL-5 — AI chat, still just the Mutual NDA):**
 
-- `GET /api/chat/greeting` (hardcoded, no LLM call) and `POST /api/chat/message` (stateless — frontend holds the message history) drive a freeform chat that fills the same 10-field Mutual NDA form the manual form always used. The manual form still exists as an editable fallback ("Step 2") in case the AI gets something wrong.
-- Uses the adaptive `openrouter/openrouter/free` router described under "AI layer" above, with an in-memory daily-request counter enforcing the 200/day cap before every real attempt (including retries).
+- `GET /api/chat/greeting` (hardcoded, no LLM call) and `POST /api/chat/message` (stateless — frontend holds the message history) drive a freeform chat that fills in a document's fields. The manual form still exists as an editable fallback ("Step 2") in case the AI gets something wrong.
+- Uses the adaptive `openrouter/openrouter/free` router described under "AI layer" above, with an in-memory daily-request counter enforcing the 200/day cap before every real attempt (including retries), and a hard-enforced request timeout (via a `ThreadPoolExecutor` + `future.result(timeout=...)`, not just litellm's own `timeout=` kwarg — that alone was verified live not to reliably bound the call for every model the adaptive router can pick).
 - Chat is intentionally unauthenticated, matching the rest of the prototype — no login wall.
+
+**Built (PREL-6 — all 11 document types):**
+
+- `backend/app/templates.py` parses `catalog.json` + every `templates/*.md` file at startup into a generic structure (deduped fields, nested numbered body) — there's no more per-document hand-written content or components. `GET /api/documents` (catalog) and `GET /api/documents/{id}` (parsed template) serve this to the frontend, which renders it with generic `DocumentPreview`/`DocumentForm`/`DocumentPdfDocument` components (numbering is regenerated from nesting depth, not parsed from each template's literal markers).
+- Chat now drives document-*type* selection too, not just field-filling: `document_id` is `null` until the assistant is confident which of the 11 the user needs. If the user asks for something unsupported, the system prompt instructs the model to say so and suggest the closest real match rather than setting `document_id`. The model's structured-output schema for `field_updates` is rebuilt per-request (`build_chat_reply_model`) from whichever document is currently active, so it's JSON-schema-constrained to that document's real field keys.
+- Every document also gets 4 fixed party-name/address fields in addition to whatever its own body text references — most of these templates (including Mutual NDA) never name the two parties directly in their Standard Terms text, that's conventionally a separate Cover Page.
 
 **Not yet built:**
 
-- Document generation, persistence, and 10 of the 11 document types. Only the Mutual NDA template exists, as a standalone client-side form + PDF generator with no backend integration.
+- Document persistence (nothing is saved server-side beyond the current in-browser conversation).
 - Frontend login/signup UI — the backend auth endpoints exist but nothing in `frontend/` calls them yet.

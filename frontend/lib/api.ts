@@ -1,5 +1,5 @@
 import type { ChatMessage, ChatTurnResponse } from "@/types/chat";
-import type { MutualNdaFormData } from "@/types/mutual-nda";
+import type { DocumentTemplate } from "@/types/document";
 
 // Empty string = same-origin, which is what the packaged app uses (FastAPI
 // serves the static export and /api/* from one process/port). Only needed
@@ -28,13 +28,20 @@ export async function fetchGreeting(): Promise<string> {
 
 export async function sendChatMessage(
   messages: ChatMessage[],
-  fields: MutualNdaFormData,
+  documentId: string | null,
+  fields: Record<string, string>,
 ): Promise<ChatTurnResponse> {
   const response = await fetch(`${API_BASE_URL}/api/chat/message`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, fields }),
+    body: JSON.stringify({ messages, document_id: documentId, fields }),
   });
+  if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
+  return response.json();
+}
+
+export async function fetchDocument(documentId: string): Promise<DocumentTemplate> {
+  const response = await fetch(`${API_BASE_URL}/api/documents/${documentId}`);
   if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
   return response.json();
 }

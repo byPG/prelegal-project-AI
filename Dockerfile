@@ -20,6 +20,13 @@ RUN uv sync --frozen --no-install-project --no-dev
 COPY backend/ .
 COPY --from=frontend-build /app/frontend/out ./static
 
+# templates/*.md + catalog.json are parsed by app/templates.py at import
+# time (REPO_ROOT resolves to /app here, one level up from /app/backend),
+# so they need to land at /app/templates and /app/catalog.json — not just
+# committed to git — or the app crashes on startup with a FileNotFoundError.
+COPY templates/ /app/templates/
+COPY catalog.json /app/catalog.json
+
 RUN uv sync --frozen --no-dev
 
 ENV PATH="/app/backend/.venv/bin:$PATH"

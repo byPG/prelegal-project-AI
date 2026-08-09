@@ -1,6 +1,8 @@
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, create_model, field_validator
+
+from .templates import DOCUMENT_IDS
 
 # bcrypt's limit is 72 *bytes*, not characters, so a naive Field(max_length=72)
 # lets multi-byte passwords (accents, emoji, ...) slip past validation and
@@ -35,27 +37,14 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
-# --- Chat (PREL-5: AI chat, still just the Mutual NDA) ---
+# --- Chat (PREL-5: AI chat; PREL-6: generalized to all 11 document types) ---
 
-
-class MutualNdaFields(BaseModel):
-    """Mirrors frontend/types/mutual-nda.ts's MutualNdaFormData keys.
-
-    All-optional: as a request payload, an unset field means "not filled
-    in yet"; as part of a model response, it means "no new information
-    about this field in the latest message."
-    """
-
-    partyOneName: str | None = None
-    partyOneAddress: str | None = None
-    partyTwoName: str | None = None
-    partyTwoAddress: str | None = None
-    purpose: str | None = None
-    effectiveDate: str | None = None
-    mndaTerm: str | None = None
-    termOfConfidentiality: str | None = None
-    governingLaw: str | None = None
-    jurisdiction: str | None = None
+# Any of the 11 catalog documents, or None while the assistant hasn't
+# established which one the user needs yet. Built once from templates.py's
+# static catalog (unlike field_updates below, this doesn't vary per
+# request) so the LLM's structured output is constrained to a real
+# document id rather than free-typing something that doesn't exist.
+DocumentIdLiteral = Literal[tuple(DOCUMENT_IDS)]  # type: ignore[valid-type]
 
 
 class ChatMessage(BaseModel):
@@ -69,20 +58,37 @@ class GreetingResponse(BaseModel):
 
 class ChatTurnRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1)
-    fields: MutualNdaFields = MutualNdaFields()
-
-
-class ChatTurnReply(BaseModel):
-    """Structured-output shape the model itself is asked to produce."""
-
-    reply: str
-    field_updates: MutualNdaFields = MutualNdaFields()
+    document_id: str | None = None
+    fields: dict[str, str] = {}
 
 
 class ChatTurnResponse(BaseModel):
     reply: str
-    # Sparse: the same field_updates the model produced, not merged with
-    # the request's known fields. The client merges this into its own
-    # current state so a concurrent edit made while the request was in
-    # flight doesn't get overwritten by a stale echoed-back value.
-    fields: MutualNdaFields
+    document_id: str | None
+    # Sparse: only what the model changed this turn, not merged with the
+    # request's known fields. The client merges this into its own current
+    # state so a concurrent edit made while the request was in flight
+    # doesn't get overwritten by a stale echoed-back value.
+    fields: dict[str, str | None]
+
+
+def build_chat_reply_model(field_keys: list[str]) -> type[BaseModel]:
+    """Builds a per-request structured-output schema for the LLM.
+
+    field_keys come from whichever document is currently active (empty
+    before a document type has been established), so the model is
+    schema-constrained to exactly that document's valid field keys for
+    this turn — not free-typing key names that might not match ours.
+    `extra="forbid"` makes that a hard constraint (additionalProperties:
+    false) in the generated JSON schema, not just a naming convention.
+    """
+    field_updates_fields = {key: (str | None, None) for key in field_keys}
+    FieldUpdates = create_model(
+        "FieldUpdates", __config__=ConfigDict(extra="forbid"), **field_updates_fields
+    )
+    return create_model(
+        "ChatTurnReply",
+        reply=(str, ...),
+        document_id=(DocumentIdLiteral | None, None),
+        field_updates=(FieldUpdates, FieldUpdates()),
+    )
