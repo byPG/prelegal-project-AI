@@ -104,6 +104,17 @@ def _clean_text(raw: str) -> str:
     return html.unescape(_HTML_TAG_RE.sub("", raw)).strip()
 
 
+def _clean_plain_text(raw: str) -> str:
+    # Collapses runs of whitespace but, unlike _clean_text, does NOT strip
+    # leading/trailing whitespace entirely. Some templates put a header/
+    # bold span directly adjacent to the prose that follows it with only
+    # whitespace as the separator (e.g. DPA.md: `<span class="header_3">
+    # Provider as Processor.</span>  In situations where...`, two spaces).
+    # Stripping that away here would glue the two segments together with
+    # no space at all once rendered as adjacent inline elements.
+    return re.sub(r"\s+", " ", html.unescape(_HTML_TAG_RE.sub("", raw)))
+
+
 def _normalize_label(raw_inner_html: str) -> str:
     text = _clean_text(raw_inner_html)
     text = _POSSESSIVE_RE.sub("", text)
@@ -191,7 +202,7 @@ class _TemplateParser:
         return segments
 
     def _append_plain(self, segments: list[InlineSegment], raw: str) -> None:
-        text = _clean_text(raw)
+        text = _clean_plain_text(raw)
         if text:
             segments.append(InlineSegment(type="text", text=text, variant="plain"))
 
