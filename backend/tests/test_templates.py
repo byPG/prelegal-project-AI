@@ -96,3 +96,26 @@ def test_header_spans_produce_header_variant_segments():
         if segment.type == "text" and segment.variant in ("header2", "header3")
     }
     assert header_variants == {"header2", "header3"}
+
+
+def test_a_space_survives_between_a_header_span_and_the_following_prose():
+    # Regression check: DPA.md's header_3 items put two spaces between
+    # "</span>" and the prose that follows (e.g. "...Provider as
+    # Processor.</span>  In situations where..."). A naive .strip() on
+    # each inline-text run swallows that gap entirely, gluing the header
+    # onto the next word with no space at all once rendered as adjacent
+    # elements ("Provider as Processor.In situations...").
+    dpa = get_document("dpa")
+    header_item = next(
+        item
+        for item in dpa.body
+        if any(s.type == "text" and s.variant == "header3" for s in item.inline)
+    )
+    header_index = next(
+        i for i, s in enumerate(header_item.inline) if s.type == "text" and s.variant == "header3"
+    )
+    following = header_item.inline[header_index + 1]
+    assert following.type == "text"
+    assert following.text.startswith(" "), (
+        f"expected a leading space to survive after the header span, got {following.text!r}"
+    )
