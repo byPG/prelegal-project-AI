@@ -92,3 +92,30 @@ def build_chat_reply_model(field_keys: list[str]) -> type[BaseModel]:
         document_id=(DocumentIdLiteral | None, None),
         field_updates=(FieldUpdates, FieldUpdates()),
     )
+
+
+# --- Saved documents (PREL-7: multi-user support & persistence) ---
+
+
+class SaveDocumentRequest(BaseModel):
+    document_type_id: DocumentIdLiteral
+    title: str = Field(min_length=1, max_length=200)
+    fields: dict[str, str] = {}
+
+
+class UpdateDocumentRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    fields: dict[str, str] = {}
+
+
+class SavedDocumentSummary(BaseModel):
+    id: int
+    document_type_id: str
+    document_name: str
+    title: str
+    created_at: str
+    updated_at: str
+
+
+class SavedDocumentResponse(SavedDocumentSummary):
+    fields: dict[str, str]

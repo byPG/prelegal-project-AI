@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Public_Sans, IBM_Plex_Mono } from "next/font/google";
+import { AppHeader } from "@/components/AppHeader";
+import { DisclaimerBanner } from "@/components/DisclaimerBanner";
+import { AuthProvider } from "@/lib/AuthProvider";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -31,7 +34,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${fraunces.variable} ${publicSans.variable} ${plexMono.variable} h-full`}
     >
-      <body className="min-h-full font-sans antialiased">{children}</body>
+      <body className="min-h-full font-sans antialiased">
+        <AuthProvider>
+          <DisclaimerBanner />
+          <AppHeader />
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

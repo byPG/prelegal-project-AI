@@ -1,8 +1,9 @@
 import sqlite3
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..database import get_connection
+from ..deps import get_current_user
 from ..schemas import SigninRequest, SignupRequest, TokenResponse, UserResponse
 from ..security import create_access_token, hash_password, verify_password
 
@@ -54,3 +55,8 @@ def signin(payload: SigninRequest) -> TokenResponse:
 
     token = create_access_token(subject=str(row["id"]))
     return TokenResponse(access_token=token)
+
+
+@router.get("/me", response_model=UserResponse)
+def me(current_user: UserResponse = Depends(get_current_user)) -> UserResponse:
+    return current_user

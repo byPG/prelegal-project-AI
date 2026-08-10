@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { ChatPanel } from "@/components/ChatPanel";
 import { DocumentForm } from "@/components/DocumentForm";
 import { DocumentPreview } from "@/components/DocumentPreview";
+import { SaveDocumentButton } from "@/components/SaveDocumentButton";
 import { ChatApiError, fetchDocument } from "@/lib/api";
 import type { DocumentTemplate } from "@/types/document";
 
@@ -144,7 +145,10 @@ export default function Home() {
               <h2 className="mb-4 font-display text-xl font-semibold text-ink">
                 Download your document
               </h2>
-              <DownloadPdfButton template={currentTemplate} fields={fields} />
+              <div className="flex flex-wrap items-center gap-3">
+                <DownloadPdfButton template={currentTemplate} fields={fields} />
+                <SaveDocumentButton documentTypeId={currentTemplate.id} template={currentTemplate} fields={fields} />
+              </div>
               <p className="mt-4 text-xs leading-relaxed text-ink-soft">
                 This tool fills in a template for reference. It is not legal advice — have
                 counsel review the agreement before it is signed.
