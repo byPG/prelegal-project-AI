@@ -29,6 +29,7 @@ docker run -d \
   --name "$CONTAINER_NAME" \
   --env-file .env \
   -p "${PORT}:8000" \
+  -v prelegal-data:/app/backend/data \
   "$IMAGE_NAME" >/dev/null
 
 echo "Prelegal backend available at http://localhost:${PORT}"

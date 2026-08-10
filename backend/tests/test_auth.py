@@ -83,3 +83,26 @@ def test_signin_rejects_unknown_email(client):
         "/api/auth/signin", json={"email": "nobody@example.com", "password": "supersecret"}
     )
     assert response.status_code == 401
+
+
+def test_me_returns_current_user_for_valid_token(client):
+    client.post("/api/auth/signup", json={"email": "me@example.com", "password": "supersecret"})
+    signin = client.post(
+        "/api/auth/signin", json={"email": "me@example.com", "password": "supersecret"}
+    )
+    token = signin.json()["access_token"]
+
+    response = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    assert response.json()["email"] == "me@example.com"
+
+
+def test_me_rejects_missing_token(client):
+    response = client.get("/api/auth/me")
+    assert response.status_code == 401
+
+
+def test_me_rejects_garbage_token(client):
+    response = client.get("/api/auth/me", headers={"Authorization": "Bearer not-a-real-token"})
+    assert response.status_code == 401

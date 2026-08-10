@@ -8,7 +8,7 @@ The full list of supported documents lives in `catalog.json` at the repo root:
 
 @catalog.json
 
-All 11 document types are supported; full user authentication and document persistence are still targets — see **Implementation status** at the end of this file for what's actually built so far.
+All 11 document types are supported, with full user authentication and document persistence — see **Implementation status** at the end of this file for what's actually built so far.
 
 ## How feature work happens
 
@@ -42,8 +42,8 @@ The whole thing gets packaged into a Docker container.
 
 - Backend: `backend/` directory, a uv project, FastAPI.
 - Frontend: `frontend/` directory.
-- Database: SQLite, rebuilt from scratch on every container start; includes a users table (signup and signin).
-- The frontend is built as a static export (`output: "export"` in `next.config.ts`) and served directly by FastAPI, so the whole app is one process on one port.
+- Database: SQLite, initialized (tables created if missing) on every container start but no longer wiped — the file lives on a named Docker volume (`prelegal-data`, mounted at `/app/backend/data` by the start scripts) so users and their saved documents survive restarts/redeploys.
+- The frontend is built as a static export (`output: "export"` in `next.config.ts`, with `trailingSlash: true` so FastAPI's `StaticFiles(html=True)` mount can resolve every route) and served directly by FastAPI, so the whole app is one process on one port.
 
 Start/stop scripts in `scripts/`:
 
@@ -96,7 +96,10 @@ The base is blue and purple — neighbors on the color wheel (roughly 200°–26
 - Chat now drives document-*type* selection too, not just field-filling: `document_id` is `null` until the assistant is confident which of the 11 the user needs. If the user asks for something unsupported, the system prompt instructs the model to say so and suggest the closest real match rather than setting `document_id`. The model's structured-output schema for `field_updates` is rebuilt per-request (`build_chat_reply_model`) from whichever document is currently active, so it's JSON-schema-constrained to that document's real field keys.
 - Every document also gets 4 fixed party-name/address fields in addition to whatever its own body text references — most of these templates (including Mutual NDA) never name the two parties directly in their Standard Terms text, that's conventionally a separate Cover Page.
 
-**Not yet built:**
+**Built (PREL-7 — multi-user support & final polish):**
 
-- Document persistence (nothing is saved server-side beyond the current in-browser conversation).
-- Frontend login/signup UI — the backend auth endpoints exist but nothing in `frontend/` calls them yet.
+- Frontend `/login` and `/signup` pages call the existing `POST /api/auth/signup`/`signin` endpoints; a `GET /api/auth/me` endpoint (backed by a new `get_current_user` FastAPI dependency built on `decode_access_token`) lets the frontend validate a `localStorage`-held JWT on load. Drafting a document stays fully unauthenticated, matching PREL-5/6 — signing in is only required to save/revisit documents.
+- New `documents` SQLite table (one row per saved document: owning `user_id`, `document_type_id`, `title`, `fields` as JSON, timestamps) and an auth-gated `/api/saved-documents` CRUD router (create, list, get, update, delete — all scoped by `user_id`, returning 404 rather than 403 for another user's document so existence isn't leaked). Deletion is a hard delete; saving is an explicit action (a "Save document" button next to "Download PDF") rather than autosaved on every keystroke, and re-saving the same document updates its existing row instead of creating a duplicate.
+- New `/documents` (list) and `/documents/view` (detail, reads `?id=` — not a dynamic route, since static export can't pre-build unknown ids) pages render saved documents through the same `DocumentPreview`/`DownloadPdfButton` components the creation flow uses.
+- New app chrome (header/nav, disclaimer banner, login/signup/history screens) uses the blue/purple/amber palette from "Color palette" above, namespaced as `brand-*` Tailwind tokens in `globals.css`; the document creation/preview/PDF experience keeps its existing ledger/parchment theme untouched — the two are deliberately never mixed on the same element.
+- The one-line "not legal advice" disclaimer under the download button is now also a persistent, non-dismissible banner in the root layout, shown on every screen.

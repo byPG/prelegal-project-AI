@@ -1,5 +1,7 @@
+import type { TokenResponse, User } from "@/types/auth";
 import type { ChatMessage, ChatTurnResponse } from "@/types/chat";
 import type { DocumentTemplate } from "@/types/document";
+import type { SavedDocumentDetail, SavedDocumentSummary } from "@/types/savedDocument";
 
 // Empty string = same-origin, which is what the packaged app uses (FastAPI
 // serves the static export and /api/* from one process/port). Only needed
@@ -44,4 +46,83 @@ export async function fetchDocument(documentId: string): Promise<DocumentTemplat
   const response = await fetch(`${API_BASE_URL}/api/documents/${documentId}`);
   if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
   return response.json();
+}
+
+function authHeaders(token: string): HeadersInit {
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function signUp(email: string, password: string): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
+  return response.json();
+}
+
+export async function signIn(email: string, password: string): Promise<TokenResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/signin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
+  return response.json();
+}
+
+export async function fetchCurrentUser(token: string): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/me`, { headers: authHeaders(token) });
+  if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
+  return response.json();
+}
+
+export async function saveDocument(
+  token: string,
+  payload: { document_type_id: string; title: string; fields: Record<string, string> },
+): Promise<SavedDocumentDetail> {
+  const response = await fetch(`${API_BASE_URL}/api/saved-documents`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
+  return response.json();
+}
+
+export async function updateSavedDocument(
+  token: string,
+  savedDocumentId: number,
+  payload: { title: string; fields: Record<string, string> },
+): Promise<SavedDocumentDetail> {
+  const response = await fetch(`${API_BASE_URL}/api/saved-documents/${savedDocumentId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
+  return response.json();
+}
+
+export async function listSavedDocuments(token: string): Promise<SavedDocumentSummary[]> {
+  const response = await fetch(`${API_BASE_URL}/api/saved-documents`, { headers: authHeaders(token) });
+  if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
+  return response.json();
+}
+
+export async function fetchSavedDocument(token: string, savedDocumentId: number): Promise<SavedDocumentDetail> {
+  const response = await fetch(`${API_BASE_URL}/api/saved-documents/${savedDocumentId}`, {
+    headers: authHeaders(token),
+  });
+  if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
+  return response.json();
+}
+
+export async function deleteSavedDocument(token: string, savedDocumentId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/saved-documents/${savedDocumentId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+  if (!response.ok) throw new ChatApiError(await parseErrorDetail(response));
 }

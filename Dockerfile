@@ -32,6 +32,12 @@ RUN uv sync --frozen --no-dev
 ENV PATH="/app/backend/.venv/bin:$PATH"
 EXPOSE 8000
 
+# The SQLite file lives here (see config.py's database_path); declaring it
+# as a volume documents that this path is meant to be mounted (see
+# scripts/start-*) so data survives `docker rm -f` + a fresh `docker run`,
+# not just an in-place restart of the same container.
+VOLUME ["/app/backend/data"]
+
 # Invoke uvicorn directly rather than via `uv run`: `uv run` re-checks (and,
 # if it thinks anything drifted, re-syncs over the network) the environment
 # on every invocation, which turns container startup into something that

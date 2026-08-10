@@ -29,6 +29,7 @@ docker run -d `
     --name $ContainerName `
     --env-file .env `
     -p "${Port}:8000" `
+    -v prelegal-data:/app/backend/data `
     $ImageName | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "docker run failed" }
 

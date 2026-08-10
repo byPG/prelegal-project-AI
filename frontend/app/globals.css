@@ -14,6 +14,18 @@
   --color-brass: #ad8a52;
   --color-brass-soft: #d9c193;
   --color-line: #c9c0a8;
+
+  /* CLAUDE.md's blue/purple/amber system — used for app chrome (header,
+     nav, auth screens, document history) added in PREL-7. The document
+     creation/preview/PDF experience above stays on the ledger/parchment
+     theme; the two are namespaced separately (brand-* vs. the unprefixed
+     tokens above) so a class never ambiguously belongs to both. */
+  --color-brand-blue: #2e86ab;
+  --color-brand-purple: #6a4c93;
+  --color-brand-amber: #f2a541;
+  --color-brand-navy: #1b2a4a;
+  --color-brand-gray: #7a7f87;
+  --color-brand-danger: #b3435c;
 }
 
 @theme inline {

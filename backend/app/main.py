@@ -6,8 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .config import BACKEND_DIR, INSECURE_DEFAULT_JWT_SECRET, settings
-from .database import reset_database
-from .routers import auth, chat, documents
+from .database import init_database
+from .routers import auth, chat, documents, saved_documents
 
 STATIC_DIR = BACKEND_DIR / "static"
 
@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
             "committed in .env.example — tokens can be forged by anyone with "
             "repo access. Set a real JWT_SECRET before running outside local dev."
         )
-    reset_database()
+    init_database()
     yield
 
 
@@ -39,6 +39,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(documents.router)
+app.include_router(saved_documents.router)
 
 
 @app.get("/api/health")
